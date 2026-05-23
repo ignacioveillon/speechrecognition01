@@ -4,14 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Deutsche Spracherkennung</title>
+<title>Deutsches Diktat</title>
 
 <style>
+
 body{
-    font-family: Arial;
-    background:#f2f2f2;
     margin:0;
     padding:40px;
+    font-family:Arial;
+    background:#f2f2f2;
 }
 
 .container{
@@ -27,18 +28,18 @@ button{
     font-size:16px;
     margin-right:10px;
     cursor:pointer;
+    border:none;
+    border-radius:8px;
 }
 
 #start{
     background:#1e88e5;
     color:white;
-    border:none;
 }
 
 #stop{
     background:#e53935;
     color:white;
-    border:none;
 }
 
 #output{
@@ -46,9 +47,10 @@ button{
     padding:15px;
     background:#fafafa;
     border:1px solid #ddd;
-    min-height:150px;
+    min-height:200px;
     white-space:pre-wrap;
 }
+
 </style>
 </head>
 
@@ -56,7 +58,7 @@ button{
 
 <div class="container">
 
-<h2>Sprache → Text (Deutsch)</h2>
+<h2>Kontinuierliches Diktat (Deutsch)</h2>
 
 <button id="start">Start</button>
 <button id="stop">Stop</button>
@@ -68,13 +70,13 @@ button{
 <script>
 
 const output = document.getElementById("output");
-const start = document.getElementById("start");
-const stop = document.getElementById("stop");
+const startBtn = document.getElementById("start");
+const stopBtn = document.getElementById("stop");
 
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-if(!SpeechRecognition){
-    output.innerText = "Browser no soporta SpeechRecognition.";
+if (!SpeechRecognition) {
+    output.innerText = "SpeechRecognition nicht unterstützt.";
 }
 
 const recognition = new SpeechRecognition();
@@ -83,30 +85,59 @@ recognition.lang = "de-DE";
 recognition.continuous = true;
 recognition.interimResults = true;
 
-let text = "";
+let finalText = "";
+let isRunning = false;
+let restartTimeout;
+
+function startRecognition() {
+    if (!isRunning) return;
+
+    try {
+        recognition.start();
+    } catch (e) {
+        // evita error por reinicio duplicado
+    }
+}
 
 recognition.onresult = (event) => {
-    let interim = "";
 
-    for(let i = event.resultIndex; i < event.results.length; i++){
+    let interimText = "";
+
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+
         const transcript = event.results[i][0].transcript;
 
-        if(event.results[i].isFinal){
-            text += transcript + " ";
-        }else{
-            interim += transcript;
+        if (event.results[i].isFinal) {
+            finalText += transcript + " ";
+        } else {
+            interimText += transcript;
         }
     }
 
-    output.innerText = text + "\n" + interim;
+    output.innerText = finalText + interimText;
+
+    clearTimeout(restartTimeout);
+
+    restartTimeout = setTimeout(() => {
+        recognition.stop();
+    }, 1200);
+
 };
 
-start.onclick = () => {
-    text = "";
+recognition.onend = () => {
+    if (isRunning) {
+        startRecognition();
+    }
+};
+
+startBtn.onclick = () => {
+    finalText = "";
+    isRunning = true;
     recognition.start();
 };
 
-stop.onclick = () => {
+stopBtn.onclick = () => {
+    isRunning = false;
     recognition.stop();
 };
 
