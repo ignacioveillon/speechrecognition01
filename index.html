@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Deutsche Spracherkennung</title>
+
+<style>
+body{
+    font-family: Arial;
+    background:#f2f2f2;
+    margin:0;
+    padding:40px;
+}
+
+.container{
+    max-width:800px;
+    margin:auto;
+    background:white;
+    padding:25px;
+    border-radius:12px;
+}
+
+button{
+    padding:12px 18px;
+    font-size:16px;
+    margin-right:10px;
+    cursor:pointer;
+}
+
+#start{
+    background:#1e88e5;
+    color:white;
+    border:none;
+}
+
+#stop{
+    background:#e53935;
+    color:white;
+    border:none;
+}
+
+#output{
+    margin-top:20px;
+    padding:15px;
+    background:#fafafa;
+    border:1px solid #ddd;
+    min-height:150px;
+    white-space:pre-wrap;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>Sprache → Text (Deutsch)</h2>
+
+<button id="start">Start</button>
+<button id="stop">Stop</button>
+
+<div id="output"></div>
+
+</div>
+
+<script>
+
+const output = document.getElementById("output");
+const start = document.getElementById("start");
+const stop = document.getElementById("stop");
+
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+if(!SpeechRecognition){
+    output.innerText = "Browser no soporta SpeechRecognition.";
+}
+
+const recognition = new SpeechRecognition();
+
+recognition.lang = "de-DE";
+recognition.continuous = true;
+recognition.interimResults = true;
+
+let text = "";
+
+recognition.onresult = (event) => {
+    let interim = "";
+
+    for(let i = event.resultIndex; i < event.results.length; i++){
+        const transcript = event.results[i][0].transcript;
+
+        if(event.results[i].isFinal){
+            text += transcript + " ";
+        }else{
+            interim += transcript;
+        }
+    }
+
+    output.innerText = text + "\n" + interim;
+};
+
+start.onclick = () => {
+    text = "";
+    recognition.start();
+};
+
+stop.onclick = () => {
+    recognition.stop();
+};
+
+</script>
+
+</body>
+</html>
